@@ -56,21 +56,30 @@ func OrderRequestToWire(req OrderRequest, meta map[string]AssetInfo, isSpot bool
 	return OrderWire{
 		Asset:      assetId,
 		IsBuy:      req.IsBuy,
-		LimitPx:    FloatToWire(req.LimitPx, maxDecimals, info.SzDecimals),
-		SizePx:     FloatToWire(req.Sz, maxDecimals, info.SzDecimals),
+		LimitPx:    FloatToWire(req.LimitPx, maxDecimals),
+		SizePx:     FloatToWire(req.Sz, maxDecimals),
 		ReduceOnly: req.ReduceOnly,
 		OrderType:  OrderTypeToWire(req.OrderType),
 	}
 }
-func ModifyOrderRequestToWire(req ModifyOrderRequest, meta map[string]AssetInfo) ModifyOrderWire {
+func ModifyOrderRequestToWire(req ModifyOrderRequest, meta map[string]AssetInfo, isSpot bool) ModifyOrderWire {
 	info := meta[req.Coin]
+	var assetId, maxDecimals int
+	if isSpot {
+		// https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/asset-ids
+		assetId = info.AssetId + 10000
+		maxDecimals = SPOT_MAX_DECIMALS
+	} else {
+		assetId = info.AssetId
+		maxDecimals = PERP_MAX_DECIMALS
+	}
 	return ModifyOrderWire{
 		OrderId: req.OrderId,
 		Order: OrderWire{
-			Asset:      info.AssetId,
+			Asset:      assetId,
 			IsBuy:      req.IsBuy,
-			LimitPx:    FloatToWire(req.LimitPx, nil),
-			SizePx:     FloatToWire(req.Sz, &info.SzDecimals),
+			LimitPx:    FloatToWire(req.LimitPx, maxDecimals),
+			SizePx:     FloatToWire(req.Sz, maxDecimals),
 			ReduceOnly: req.ReduceOnly,
 			OrderType:  OrderTypeToWire(req.OrderType),
 		},
@@ -100,7 +109,7 @@ func OrderTypeToWire(orderType OrderType) OrderTypeWire {
 
 // Format the float with custom decimal places, default is 6 (perp), 8 (spot).
 // https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/tick-and-lot-size
-func FloatToWire(x float64, maxDecimals int, szDecimals int) string {
+func FloatToWire(x float64, maxDecimals int) string {
 	bigf := big.NewFloat(x)
 	var maxDecSz uint
 	intPart, _ := bigf.Int64()

@@ -274,11 +274,11 @@ func (api *ExchangeAPI) BulkCancelOrders(cancels []CancelOidWire) (*CancelOrderR
 
 // Bulk modify orders
 // https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#modify-multiple-orders
-func (api *ExchangeAPI) BulkModifyOrders(modifyRequests []ModifyOrderRequest) (*PlaceOrderResponse, error) {
+func (api *ExchangeAPI) BulkModifyOrders(modifyRequests []ModifyOrderRequest, isSpot bool) (*PlaceOrderResponse, error) {
 	wires := []ModifyOrderWire{}
 
 	for _, req := range modifyRequests {
-		wires = append(wires, ModifyOrderRequestToWire(req, api.meta))
+		wires = append(wires, ModifyOrderRequestToWire(req, api.meta, isSpot)) // TODO: check if it works
 	}
 	action := ModifyOrderAction{
 		Type:     "batchModify",
@@ -369,7 +369,7 @@ func (api *ExchangeAPI) Withdraw(destination string, amount float64) (*WithdrawR
 	action := WithdrawAction{
 		Type:        "withdraw3",
 		Destination: destination,
-		Amount:      FloatToWire(amount, PERP_MAX_DECIMALS, SZ_DECIMALS),
+		Amount:      FloatToWire(amount, PERP_MAX_DECIMALS), // TODO: check if it works
 		Time:        nonce,
 	}
 	signatureChainID, chainType := api.getChainParams()
