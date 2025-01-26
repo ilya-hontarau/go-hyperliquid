@@ -57,7 +57,7 @@ func OrderRequestToWire(req OrderRequest, meta map[string]AssetInfo, isSpot bool
 	return OrderWire{
 		Asset:      assetId,
 		IsBuy:      req.IsBuy,
-		LimitPx:    FloatToWire(req.LimitPx, maxDecimals),
+		LimitPx:    RoundOrderPrice(req.LimitPx, info.SzDecimals, maxDecimals),
 		SizePx:     RoundOrderSize(req.Sz, info.SzDecimals),
 		ReduceOnly: req.ReduceOnly,
 		OrderType:  OrderTypeToWire(req.OrderType),
