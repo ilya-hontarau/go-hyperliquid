@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/big"
 	"strconv"
 	"strings"
@@ -57,7 +58,7 @@ func OrderRequestToWire(req OrderRequest, meta map[string]AssetInfo, isSpot bool
 		Asset:      assetId,
 		IsBuy:      req.IsBuy,
 		LimitPx:    FloatToWire(req.LimitPx, maxDecimals),
-		SizePx:     FloatToWire(req.Sz, maxDecimals),
+		SizePx:     RoundOrderSize(req.Sz, info.SzDecimals),
 		ReduceOnly: req.ReduceOnly,
 		OrderType:  OrderTypeToWire(req.OrderType),
 	}
@@ -105,6 +106,43 @@ func OrderTypeToWire(orderType OrderType) OrderTypeWire {
 		}
 	}
 	return OrderTypeWire{}
+}
+
+func RoundOrderSize(x float64, szDecimals int) string {
+	newX := math.Round(x*math.Pow10(szDecimals)) / math.Pow10(szDecimals)
+	// TODO: add rounding
+	return big.NewFloat(newX).Text('f', szDecimals)
+}
+
+func RoundOrderPrice(x float64, szDecimals int, maxDecimals int) string {
+	maxSignFigures := 5
+
+	allowedDecimals := maxDecimals - szDecimals
+	numberOfDigitsInIntegerPart := len(strconv.Itoa(int(x)))
+	if numberOfDigitsInIntegerPart >= maxSignFigures {
+		return RoundOrderSize(x, 0)
+	}
+	allowedSignFigures := maxSignFigures - numberOfDigitsInIntegerPart
+
+	if x < 1 {
+		text := RoundOrderSize(x, allowedDecimals)
+		startSignFigures := false
+		for i := 2; i < len(text); i++ {
+			if text[i] == '0' && !startSignFigures {
+				continue
+			}
+			startSignFigures = true
+			allowedSignFigures--
+			if allowedSignFigures == 0 {
+				return text[:i+1]
+			}
+		}
+		return text
+	} else {
+		return RoundOrderSize(x, min(allowedSignFigures, allowedDecimals))
+	}
+
+	return ""
 }
 
 // Format the float with custom decimal places, default is 6 (perp), 8 (spot).
