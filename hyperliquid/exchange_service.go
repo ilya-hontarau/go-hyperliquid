@@ -5,6 +5,8 @@ import (
 	"math"
 
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
+
+	"github.com/Logarithm-Labs/go-hyperliquid/hyperliquid/sign"
 )
 
 // IExchangeAPI is an interface for the /exchange service.
@@ -236,11 +238,7 @@ func (api *ExchangeAPI) BulkOrders(requests []OrderRequest, grouping Grouping, i
 	}
 	timestamp := GetNonce()
 	action := OrderWiresToOrderAction(wires, grouping)
-	v, r, s, err := api.SignL1Action(action, timestamp)
-	if err != nil {
-		api.debug("Error signing L1 action: %s", err)
-		return nil, err
-	}
+	v, r, s := sign.SignL1Action("", action, int64(timestamp), api.IsMainnet(), api.KeyManager())
 	request := ExchangeRequest{
 		Action:       action,
 		Nonce:        timestamp,

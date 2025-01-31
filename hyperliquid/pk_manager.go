@@ -13,6 +13,10 @@ type PKeyManager struct {
 	publicKey     *ecdsa.PublicKey
 }
 
+func (km *PKeyManager) GetKey(address string) *ecdsa.PrivateKey {
+	return km.privateKey
+}
+
 func (km *PKeyManager) PublicECDSA() *ecdsa.PublicKey {
 	return km.publicKey
 }
