@@ -63,6 +63,7 @@ func OrderRequestToWire(req OrderRequest, meta map[string]AssetInfo, isSpot bool
 		OrderType:  OrderTypeToWire(req.OrderType),
 	}
 }
+
 func ModifyOrderRequestToWire(req ModifyOrderRequest, meta map[string]AssetInfo, isSpot bool) ModifyOrderWire {
 	info := meta[req.Coin]
 	var assetId, maxDecimals int

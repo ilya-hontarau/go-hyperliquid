@@ -248,6 +248,23 @@ func (api *ExchangeAPI) BulkOrders(requests []OrderRequest, grouping Grouping, i
 	return MakeUniversalRequest[PlaceOrderResponse](api, request)
 }
 
+func (api *ExchangeAPI) RoundPrice(coin string, price float64, isSpot bool) string {
+	info := api.meta[coin]
+	var maxDecimals int
+	if isSpot {
+		// https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/asset-ids
+		maxDecimals = SPOT_MAX_DECIMALS
+	} else {
+		maxDecimals = PERP_MAX_DECIMALS
+	}
+	return RoundOrderPrice(price, info.SzDecimals, maxDecimals)
+}
+
+func (api *ExchangeAPI) RoundSize(coin string, size float64) string {
+	info := api.meta[coin]
+	return RoundOrderSize(size, info.SzDecimals)
+}
+
 // Cancel order(s)
 // https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#cancel-order-s
 func (api *ExchangeAPI) BulkCancelOrders(cancels []CancelOidWire) (*CancelOrderResponse, error) {
